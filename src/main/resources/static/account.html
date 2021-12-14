@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0/dist/Chart.min.js"></script>
+    <script>
+        var chart; var data; var options; var accountId;
+        function initChart(){
+            accountId=document.getElementById("accountId").value;
+            data={
+                labels: [],
+                datasets: [
+                    {
+                        label: "Balance",
+                        backgroundColor: ["#c45850"],
+                        data: []
+                    }
+                ]
+            };
+            options={
+                responsive:false,
+                legend: { display: true },
+                title: {
+                    display: true,
+                    text: 'AccountId: '+accountId
+                },
+                scales:{
+                    xAxes: [{
+                        display: false
+                    }]
+                }
+            };
+            chart=new Chart(document.getElementById("myChart"),{
+                type: "line",
+                data: data,
+                options: options
+            });
+
+            var accountEventSource = new EventSource("query/accounts/"+accountId+"/watch");
+            accountEventSource.addEventListener("message", function (event){
+                var account = JSON.parse(event.data);
+                data.labels.push(new Date().getTime());
+                data.datasets[0].data.push(account.balance);
+                chart.update();
+            })
+        }
+    </script>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="form-inline">
+        <input size="70" type="text" class="form-control" type="text" id="accountId">
+        <button class="btn btn-success ml-4" onclick="initChart()">Subscribe</button>
+    </div>
+    <div>
+        <canvas id="myChart" width="850" height="400"></canvas>
+    </div>
+</div>
+</body>
+</html>
